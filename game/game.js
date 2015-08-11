@@ -4,9 +4,10 @@
     create: create
   });
 
-  var bar, body, head;
+  var body, head, notes, explosions;
   var health = 100;
   var value = 0;
+  var hitX;
 
   function preload () {
 
@@ -17,23 +18,33 @@
     game.load.image('walken_body', 'resources/walken_body.png');
     game.load.image('walken_head', 'resources/walken_head.png');
     game.load.spritesheet('background', 'resources/bg_pirates_cheering_sprite.png', 640, 368, 4);
+    game.load.spritesheet('kaboom', 'resources/explode.png', 128, 128);
 
   }
 
   function create () {
+
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+    hitX = game.width / 2;
 
     //  Animated background for our game
     var background = game.add.sprite(0, 0, 'background');
     background.frame = 0;
     background.animations.add('bg_moving', [0, 1, 2, 3], 5, true);
     background.animations.play('bg_moving');
-    body = game.add.sprite(400, 400, 'walken_body');
-    body.anchor.setTo(0.5, 0.5);
-    body.scale.setTo(0.5, 0.5);
 
-    head = game.add.sprite(288, 430, 'walken_head');
+    var walken = game.add.group()
+
+    body = game.add.sprite(0, 0, 'walken_body');
+    head = game.add.sprite(330, 630, 'walken_head');
     head.anchor.setTo(0.5, 0.9);
-    head.scale.setTo(0.5, 0.5);
+
+    walken.add(body)
+    walken.add(head)
+    walken.scale.setTo(0.3, 0.3)
+
+    walken.x = 380;
+    walken.y = 80;
 
     // keep the spacebar from propogating up to the browser
     game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
@@ -41,21 +52,73 @@
     var spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     spaceKey.onDown.add(moreCowbell);
 
-    bar = game.add.graphics(10, 10);
-    bar.lineStyle(3, 0x00ff00, 1);
-    bar.moveTo(0, 0);
-    bar.lineTo(100, 0);
+    // Add hit bar
+    game.add.graphics(0, 0)
+      .lineStyle(3, 0x00ff00, 1)
+      .moveTo(hitX, 0)
+      .lineTo(hitX, game.height)
+
+    // A note pool
+    notes = game.add.group(); // Create a group
+    notes.enableBody = true;  // Add physics to the group
+    notes.createMultiple(10, 'walken_head'); // Create 10 pipes
+    notes.forEach(function(note) {
+      note.anchor.x = 0.5;
+      note.anchor.y = 0.5;
+    })
+
+    // An explosion pool
+    explosions = game.add.group();
+    explosions.createMultiple(30, 'kaboom');
+    explosions.forEach(function(explosion) {
+      explosion.anchor.x = 0.5;
+      explosion.anchor.y = 0.5;
+      explosion.animations.add('kaboom');
+    });
+
+    addOneNote(0, 100);
   }
 
   function moreCowbell () {
-    health -= 10;
-    bar.scale.x = health / 100;
 
-    game.add.tween(head.scale)
-      .to({
-        x: head.scale.x + 0.05,
-        y: head.scale.y + 0.05
-      }, 200, Phaser.Easing.Back.Out, true);
+    addOneNote();
+
+    var closest = notes.children.slice().map(function(note) {
+      note._hitDistance = Math.abs(hitX - note.x);
+      return note;
+    }).sort(function(a, b) {
+      return a._hitDistance - b._hitDistance;
+    })[0];
+
+    if (closest._hitDistance < 10) {
+      var explosion = explosions.getFirstExists(false);
+      explosion.reset(closest.x, closest.y);
+      explosion.play('kaboom', 30, false, true);
+      closest.kill();
+    } else {
+      game.add.tween(head.scale)
+        .to({
+          x: head.scale.x + 0.05,
+          y: head.scale.y + 0.05
+        }, 200, Phaser.Easing.Back.Out, true);
+    }
+  }
+
+  function addOneNote() {
+    // Get the first dead note of our group
+    var note = notes.getFirstDead();
+    if (!note) return;
+
+    // Set the new position of the note
+    note.reset(0, 260);
+    note.scale.setTo(0.1, 0.1)
+
+    // Add velocity to the note to make it move left
+    note.body.velocity.x = 100;
+
+    // Kill the note when it's no longer visible
+    note.checkWorldBounds = true;
+    note.outOfBoundsKill = true;
   }
 
 
