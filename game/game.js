@@ -25,15 +25,15 @@ window.onload = function() {
     var spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     spaceKey.onDown.add(onSpaceDown);
 
-    bar = game.add.graphics();
+    bar = game.add.graphics(10, 10);
+    bar.lineStyle(3, 0x00ff00, 1);
+    bar.moveTo(0, 0);
+    bar.lineTo(100, 0);
   }
 
   function onSpaceDown () {
     health -= 10;
-    bar.clear();
-    bar.lineStyle(3, 0x00ff00, 1);
-    bar.moveTo(10, 10);
-    bar.lineTo(10 + health, 10);
+    bar.scale.x = health / 100;
   }
 
 };
