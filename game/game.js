@@ -59,11 +59,11 @@
     var spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     spaceKey.onDown.add(moreCowbell);
 
-    // Add hit bar
-    game.add.graphics(0, 0)
-      .lineStyle(3, 0x00ff00, 1)
-      .moveTo(hitX, 0)
-      .lineTo(hitX, game.height)
+    var hitBar = game.add.bitmapData(4, game.height); //width, height
+    hitBar.fill(0, 255, 0, 1); //Red, Green, Blue, Alpha
+    hitBarSprite = game.add.sprite(game.width / 2, 0, hitBar);
+
+    game.physics.enable(hitBarSprite, Phaser.Physics.ARCADE);
 
     // A note pool
     notes = game.add.group(); // Create a group
@@ -89,11 +89,7 @@
 
   function update () {
     game.physics.arcade.collide(head, notes, function(walken, note) {
-      game.add.tween(head.scale)
-        .to({
-          x: head.scale.x + 0.05,
-          y: head.scale.y + 0.05
-        }, 200, Phaser.Easing.Back.Out, true);
+      takeHit();
       note.kill();
     });
   }
@@ -106,24 +102,17 @@
 
     addOneNote();
 
-    var closest = notes.children.slice().map(function(note) {
-      note._hitDistance = Math.abs(hitX - note.x);
-      return note;
-    }).sort(function(a, b) {
-      return a._hitDistance - b._hitDistance;
-    })[0];
-
-    if (closest.alive && closest._hitDistance < 10) {
+    var hitAny = false;
+    game.physics.arcade.overlap(hitBarSprite, notes, function(walken, note) {
       var explosion = explosions.getFirstExists(false);
-      explosion.reset(closest.x, closest.y);
+      explosion.reset(note.x, note.y);
       explosion.play('kaboom', 30, false, true);
-      closest.kill();
-    } else {
-      game.add.tween(head.scale)
-        .to({
-          x: head.scale.x + 0.05,
-          y: head.scale.y + 0.05
-        }, 200, Phaser.Easing.Back.Out, true);
+      note.kill();
+      hitAny = true;
+    });
+
+    if (!hitAny) {
+      takeHit();
     }
   }
 
@@ -133,15 +122,23 @@
     if (!note) return;
 
     // Set the new position of the note
-    note.reset(0, 260);
+    note.reset(0, game.rnd.integerInRange(250, 270));
     note.scale.setTo(0.1, 0.1)
 
     // Add velocity to the note to make it move left
-    note.body.velocity.x = game.rnd.integerInRange(50, 400);
+    note.body.velocity.x = game.rnd.integerInRange(200, 500);
 
     // Kill the note when it's no longer visible
     note.checkWorldBounds = true;
     note.outOfBoundsKill = true;
+  }
+
+  function takeHit () {
+    game.add.tween(head.scale)
+      .to({
+        x: head.scale.x + 0.05,
+        y: head.scale.y + 0.05
+      }, 200, Phaser.Easing.Back.Out, true);
   }
 
 
