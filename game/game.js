@@ -11,6 +11,10 @@ window.onload = function() {
 
   function preload () {
 
+    game.scale.pageAlignHorizontally = true;
+    game.scale.pageAlignVertically = true;
+    game.scale.refresh();
+
     game.load.image('walken_body', 'resources/walken_body.png');
     game.load.image('walken_head', 'resources/walken_head.png');
     game.load.spritesheet('background', 'resources/bg_pirates_cheering_sprite.png', 640, 368, 4);
