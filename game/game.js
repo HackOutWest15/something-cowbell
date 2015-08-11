@@ -1,4 +1,3 @@
-window.onload = function() {
 
   var game = new Phaser.Game(640, 368, Phaser.AUTO, '', {
     preload: preload,
@@ -94,5 +93,3 @@ window.onload = function() {
       moreCowbell();
     }
   }
-
-};
