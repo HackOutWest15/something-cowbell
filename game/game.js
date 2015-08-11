@@ -5,6 +5,9 @@ window.onload = function() {
     create: create
   });
 
+  var bar;
+  var health = 100;
+
   function preload () {
 
     game.load.image('logo', 'phaser.png');
@@ -22,10 +25,15 @@ window.onload = function() {
     var spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
     spaceKey.onDown.add(onSpaceDown);
 
+    bar = game.add.graphics();
   }
 
   function onSpaceDown () {
-    game.debug.text('OMG SPACE', 100, 100, '#fff')
+    health -= 10;
+    bar.clear();
+    bar.lineStyle(3, 0x00ff00, 1);
+    bar.moveTo(10, 10);
+    bar.lineTo(10 + health, 10);
   }
 
 };
