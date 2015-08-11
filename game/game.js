@@ -1,6 +1,6 @@
 window.onload = function() {
 
-  var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {
+  var game = new Phaser.Game(640, 368, Phaser.AUTO, '', {
     preload: preload,
     create: create
   });
@@ -13,11 +13,17 @@ window.onload = function() {
 
     game.load.image('walken_body', 'resources/walken_body.png');
     game.load.image('walken_head', 'resources/walken_head.png');
+    game.load.spritesheet('background', 'resources/bg_pirates_cheering_sprite.png', 640, 368, 4);
 
   }
 
   function create () {
 
+    //  Animated background for our game
+    var background = game.add.sprite(0, 0, 'background');
+    background.frame = 0;
+    background.animations.add('bg_moving', [0, 1, 2, 3], 5, true);
+    background.animations.play('bg_moving');
     body = game.add.sprite(400, 400, 'walken_body');
     body.anchor.setTo(0.5, 0.5);
     body.scale.setTo(0.5, 0.5);
