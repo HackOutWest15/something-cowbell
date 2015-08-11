@@ -6,9 +6,9 @@ struct drum {
   byte event;
 };
 
-#define THRESHOLD_VAL 2
-#define THRESHOLD_ON 3
-#define THRESHOLD_OFF 16
+#define THRESHOLD_VAL 20
+#define THRESHOLD_ON 1
+#define THRESHOLD_OFF 4
 #define SCALE 1
 
 #define EV_NONE 0
@@ -20,11 +20,16 @@ struct event {
   byte value;
 };
 
+boolean midi = true;
+
 void readDrum(struct drum *d, struct event *e) {
   /* Clear event */
   e->type = 0;
   e->value = 0;
   byte val = analogRead(d->pin);
+  if (!midi && val > 0) {
+    Serial.println(val);
+  }
   /* if (d->event == EV_NOTE_ON) { */
   /*   Serial.print(val); */
   /*   Serial.print(" "); */
@@ -57,7 +62,8 @@ void readDrum(struct drum *d, struct event *e) {
   /* Check for note on */
   if (d->on_ctr >= THRESHOLD_ON && d->event == EV_NONE) {
     e->type = EV_NOTE_ON;
-    e->value = min(127, SCALE * d->total / d->on_ctr);
+    byte ev_val = (SCALE * d->total);
+    e->value = min(127, ev_val);
     d->event = EV_NOTE_ON;
   }
 
@@ -78,8 +84,23 @@ drum* drums[] = {
   NULL
 };
 
+#define MIDI_NOTE_ON 0x90
+#define MIDI_NOTE_OFF 0x80
+#define MIDI_CC 0xB0
+#define MIDI_C3 60
+
+void sendMidi(byte event, byte note, byte velocity) {
+  Serial.write(event);
+  Serial.write(note);
+  Serial.write(velocity);
+}
+
 void setup() {
-  Serial.begin(9600);  // Initializing the serial port at 9600 baud
+  if (midi) {
+    Serial.begin(31250);
+  } else {
+    Serial.begin(9600);
+  }
 }
 
 void loop() {
@@ -90,13 +111,18 @@ void loop() {
     event e;
     readDrum(d, &e);
     if (e.type == EV_NOTE_ON) {
-      Serial.print("Note on for: ");
-      Serial.print(d->pin);
-      Serial.print(", value: ");
-      Serial.println(e.value, DEC);
+      if (midi) {
+        sendMidi(MIDI_NOTE_ON, MIDI_C3 + i, e.value);
+      } else {
+        Serial.print("Note on: ");
+        Serial.println(e.value);
+      }
     } else if (e.type == EV_NOTE_OFF) {
-      Serial.print("Note off for: ");
-      Serial.println(d->pin);
+      if (midi) {
+        sendMidi(MIDI_NOTE_OFF, MIDI_C3 + i, 0);
+      } else {
+        Serial.println("Note off.");
+      }
     }
     ++i;
   }
