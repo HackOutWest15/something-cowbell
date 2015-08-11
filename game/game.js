@@ -1,7 +1,9 @@
 
   var game = new Phaser.Game(640, 368, Phaser.AUTO, '', {
     preload: preload,
-    create: create
+    create: create,
+    update: update,
+    render: render
   });
 
   var body, head, notes, explosions;
@@ -37,6 +39,11 @@
 
     body = game.add.sprite(0, 0, 'walken_body');
     head = game.add.sprite(330, 630, 'walken_head');
+    head.enableBody = true;
+    game.physics.enable(head, Phaser.Physics.ARCADE);
+    head.body.immovable = true
+    head.body.setSize(40, 200, 0, 0);
+
     head.anchor.setTo(0.5, 0.9);
 
     walken.add(body)
@@ -61,6 +68,7 @@
     // A note pool
     notes = game.add.group(); // Create a group
     notes.enableBody = true;  // Add physics to the group
+    game.physics.enable(notes, Phaser.Physics.ARCADE);
     notes.createMultiple(10, 'walken_head'); // Create 10 pipes
     notes.forEach(function(note) {
       note.anchor.x = 0.5;
@@ -79,6 +87,21 @@
     addOneNote(0, 100);
   }
 
+  function update () {
+    game.physics.arcade.collide(head, notes, function(walken, note) {
+      game.add.tween(head.scale)
+        .to({
+          x: head.scale.x + 0.05,
+          y: head.scale.y + 0.05
+        }, 200, Phaser.Easing.Back.Out, true);
+      note.kill();
+    });
+  }
+
+  function render () {
+    // game.debug.body(head);
+  }
+
   function moreCowbell () {
 
     addOneNote();
@@ -90,7 +113,7 @@
       return a._hitDistance - b._hitDistance;
     })[0];
 
-    if (closest._hitDistance < 10) {
+    if (closest.alive && closest._hitDistance < 10) {
       var explosion = explosions.getFirstExists(false);
       explosion.reset(closest.x, closest.y);
       explosion.play('kaboom', 30, false, true);
@@ -114,7 +137,7 @@
     note.scale.setTo(0.1, 0.1)
 
     // Add velocity to the note to make it move left
-    note.body.velocity.x = 100;
+    note.body.velocity.x = game.rnd.integerInRange(50, 400);
 
     // Kill the note when it's no longer visible
     note.checkWorldBounds = true;
