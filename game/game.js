@@ -15,6 +15,8 @@ var health = 37;
 var value = 0;
 var hitX;
 var hitAny = false;
+var bubbleX = 180;
+var bubbleY = 160;
 
 function preload () {
 
@@ -154,16 +156,14 @@ function create () {
   function takeHit () {
     health += 1;
 
-    if (health >= 38) {
-      if (bubble)
-        bubble.kill();
-      bubble = game.world.add(new SpeechBubble(game, 180, 195, 256, "I NEED more cowbell!"));
-    }
-    else if (health >= 40) {
-      if (bubble)
-        bubble.kill();
+    if (bubble)
+      bubble.kill();
 
-      bubble = game.world.add(new SpeechBubble(game, 180, 190, 256,
+    if (health >= 38 && health <= 40) {
+      bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256, "I NEED more cowbell!"));
+    }
+    else if (health > 40) {
+      bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
         "I have a fever and the prescription is MORE COWBELL!"));
     }
 
@@ -172,9 +172,12 @@ function create () {
   function didHit() {
     health -= 1;
 
-    if (health <= 37) {
-      if (bubble)
-        bubble.kill();
+    if (bubble)
+      bubble.kill();
+
+    if (health < 33) {
+      bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
+        "That's what I'm talking about fellas"));
     }
   }
 
