@@ -9,13 +9,14 @@ var game = new Phaser.Game(640, 368, Phaser.AUTO, '', {
 var body, head, notes, explosions, thermometer;
 var value = 0;
 var hitX;
-var body, head, notes, explosions, bubble;
+var body, head, notes, explosions, bubble, emitter, rightEdge;
 var health;
 var value = 0;
 var hitX;
 var hitAny = false;
 var bubbleX = 180;
 var bubbleY = 160;
+var level = 1;
 
 function preload () {
 
@@ -91,15 +92,7 @@ function create () {
 
     game.physics.enable(hitBarSprite, Phaser.Physics.ARCADE);
 
-    // A note pool
-    notes = game.add.group(); // Create a group
-    notes.enableBody = true;  // Add physics to the group
-    game.physics.enable(notes, Phaser.Physics.ARCADE);
-    notes.createMultiple(10, 'walken_head'); // Create 10 pipes
-    notes.forEach(function(note) {
-      note.anchor.x = 0.5;
-      note.anchor.y = 0.5;
-    });
+    bubbles = game.add.group();;
 
     // An explosion pool
     explosions = game.add.group();
@@ -110,24 +103,58 @@ function create () {
       explosion.animations.add('kaboom');
     });
 
-    addOneNote(0, 100);
+    emitter = game.add.emitter(0, game.world.centerY, 50);
+    // emitter = new Phaser.Particles.Arcade.Emitter(game, 0, game.world.centerX, 20)
+    emitter.makeParticles('walken_head');
+
+    emitter.setSize(0, game.height - 20)
+    emitter.setRotation(0, 0);
+    emitter.setScale(0.1, 0.11, 0.1, 0.11);
+    emitter.setXSpeed(100, 200);
+    emitter.setYSpeed(0, 0);
+    emitter.gravity = 0;
+
+    //  false means don't explode all the sprites at once, but instead release at a rate of one particle per 100ms
+    //  The 5000 value is the lifespan of each particle before it's killed
+    emitter.flow(0, 1000, 1);
+
+    rightEdgeSprite = game.add.sprite(0, 0, null);
+    game.physics.enable(rightEdgeSprite, Phaser.Physics.ARCADE);
+    rightEdgeSprite.body.setSize(50, game.height, game.width, 0);
+
+    timer = game.time.create(false);
+
+    timer.loop(5000, function() {
+      level++;
+      var r = Math.sqrt(level);
+      emitter.setXSpeed(r * 100, r * 200);
+      emitter.flow(0, 1000 / r, 1);
+    });
+
+    timer.start();
 
   }
 
   function update () {
 
+    game.physics.arcade.overlap(rightEdgeSprite, emitter, function(walken, note) {
+      var explosion = explosions.getFirstExists(false);
+      explosion.reset(note.x, note.y);
+      explosion.play('kaboom', 30, false, true);
+      note.kill();
+      takeHit();
+    });
   }
 
   function render () {
-    // game.debug.body(head);
     game.debug.text(health.value || '--', 2, 14, "#00ff00");
+    game.debug.text('Level ' + level, 2, game.height - 2, "#ffffff");
   }
 
   function moreCowbell () {
+    hitAny = false;
 
-    addOneNote();
-
-    game.physics.arcade.overlap(hitBarSprite, notes, function(walken, note) {
+    game.physics.arcade.overlap(hitBarSprite, emitter, function(walken, note) {
       var explosion = explosions.getFirstExists(false);
       explosion.reset(note.x, note.y);
       explosion.play('kaboom', 30, false, true);
@@ -142,24 +169,6 @@ function create () {
 
   }
 
-  function addOneNote() {
-    // Get the first dead note of our group
-    var note = notes.getFirstDead();
-    if (!note) return;
-
-    // Set the new position of the note
-    note.reset(0, game.rnd.integerInRange(250, 270));
-    note.scale.setTo(0.1, 0.1);
-
-    // Add velocity to the note to make it move left
-    note.body.velocity.x = game.rnd.integerInRange(200, 500);
-
-    // Kill the note when it's no longer visible
-    note.checkWorldBounds = true;
-    note.outOfBoundsKill = true;
-    note.events.onOutOfBounds.add(takeHit);
-  }
-
   function takeHit () {
     health.increase();
 
@@ -167,10 +176,11 @@ function create () {
       bubble.kill();
 
     if (health.value >= 38 && health.value <= 40) {
-      bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256, "I NEED more cowbell!"));
+      bubble = bubbles.add(new SpeechBubble(game, bubbleX, bubbleY, 256, "I NEED more cowbell!"))
+      // bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256, "I NEED more cowbell!"));
     }
     else if (health.value > 40) {
-      bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
+      bubble = bubbles.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
         "I have a fever and the prescription is MORE COWBELL!"));
     }
 
@@ -183,7 +193,7 @@ function create () {
       bubble.kill();
 
     if (health.value < 33) {
-      bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
+      bubble = bubbles.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
         "That's what I'm talking about fellas"));
     }
   }
@@ -254,15 +264,15 @@ function create () {
 
   var SpeechBubble = function(game, x, y, width, text) {
     Phaser.Sprite.call(this, game, x, y);
-    
+
     // Some sensible minimum defaults
     width = width || 27;
     var height = 18;
-    
+
     // Set up our text and run our custom wrapping routine on it
     this.bitmapText = game.make.bitmapText(x + 12, y + 4, '8bitoperator', text, 22);
     SpeechBubble.wrapBitmapText(this.bitmapText, width);
-    
+
     // Calculate the width and height needed for the edges
     var bounds = this.bitmapText.getLocalBounds();
     if (bounds.width + 18 > width) {
@@ -271,7 +281,7 @@ function create () {
     if (bounds.height + 14 > height) {
       height = bounds.height + 14;
     }
-    
+
     // Create all of our corners and edges
     this.borders = [
     game.make.tileSprite(x + 9, y + 9, width - 9, height - 9, 'bubble-border', 4),
@@ -283,11 +293,11 @@ function create () {
     game.make.tileSprite(x + 9, y + height, width - 9, 9, 'bubble-border', 7),
     game.make.tileSprite(x, y + 9, 9, height - 9, 'bubble-border', 3),
     game.make.tileSprite(x + width, y + 9, 9, height - 9, 'bubble-border', 5)
-    ];  
-    
+    ];
+
     // Add all of the above to this sprite
     for (var b = 0, len = this.borders.length; b < len; b++) {
-      this.addChild(this.borders[b]);   
+      this.addChild(this.borders[b]);
     }
 
     // Add the tail
@@ -296,7 +306,7 @@ function create () {
     // Add our text last so it's on top
     this.addChild(this.bitmapText);
     this.bitmapText.tint = 0x111111;
-    
+
     // Offset the position to be centered on the end of the tail
     this.pivot.set(x + 25, y + height + 24);
   };
@@ -306,7 +316,7 @@ function create () {
 
   SpeechBubble.wrapBitmapText = function (bitmapText, maxWidth) {
     var words = bitmapText.text.split(' '), output = "", test = "";
-    
+
     for (var w = 0, len = words.length; w < len; w++) {
       test += words[w] + " ";
       bitmapText.text = test;
@@ -319,7 +329,7 @@ function create () {
       }
       test = output;
     }
-    
+
     output = output.replace(/(\s)$/gm, ""); // remove trailing spaces
     bitmapText.text = output;
     bitmapText.updateText();
