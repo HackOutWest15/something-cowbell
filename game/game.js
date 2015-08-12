@@ -6,7 +6,7 @@
     render: render
   });
 
-  var body, head, notes, explosions;
+  var body, head, notes, explosions, thermometer;
   var health = 100;
   var value = 0;
   var hitX;
@@ -21,6 +21,7 @@
     game.load.image('walken_head', 'resources/walken_head.png');
     game.load.spritesheet('background', 'resources/bg_pirates_cheering_sprite.png', 640, 368, 4);
     game.load.spritesheet('kaboom', 'resources/explode.png', 128, 128);
+    game.load.spritesheet('thermometer', 'resources/thermometer.png', 89, 300, 11);
 
   }
 
@@ -36,6 +37,13 @@
     background.animations.play('bg_moving');
 
     var walken = game.add.group()
+
+    thermometer = game.add.sprite(0, 0, 'thermometer');
+    thermometer.x = game.width - thermometer.width / 2 - 10;
+    thermometer.y = 10;
+    thermometer.scale.setTo(0.5, 0.5)
+    thermometer.animations.add('fever', [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 5, true);
+    thermometer.animations.play('fever')
 
     body = game.add.sprite(0, 0, 'walken_body');
     head = game.add.sprite(330, 630, 'walken_head');
