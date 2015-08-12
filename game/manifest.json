@@ -1,0 +1,29 @@
+{
+  "BundleType": "Application",
+  "BundleIdentifier": "cowbell",
+  "BundleVersion": "0.1.0",
+  "UserInstallable": false,
+  "SupportedLanguages": [
+    "en"
+  ],
+  "AppName": {
+    "en": "Cowbell"
+  },
+  "AppDescription": {
+    "en": "Cowbell"
+  },
+  "Dependencies": {
+  },
+  "VendorIdentifier": "com.spotify",
+  "BridgeDependencies": {
+  },
+  "SupportedDeviceClasses": [
+    "Desktop",
+    "Web"
+  ],
+  "InjectScripts": false,
+  "InjectStylesheets": false,
+  "SkipLanguageValidation": true,
+  "SkipUnrequireValidation": true,
+  "SpmApp": true
+}
