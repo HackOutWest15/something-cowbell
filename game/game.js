@@ -70,8 +70,11 @@ function create () {
     // keep the spacebar from propogating up to the browser
     game.input.keyboard.addKeyCapture([Phaser.Keyboard.SPACEBAR]);
 
-    var spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-    spaceKey.onDown.add(moreCowbell);
+    game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+      .onDown.add(moreCowbell);
+
+    game.input.keyboard.addKey(Phaser.Keyboard.ENTER)
+      .onDown.add(moreCowbell);
 
     var hitBar = game.add.bitmapData(4, game.height); //width, height
     hitBar.fill(0, 255, 0, 1); //Red, Green, Blue, Alpha
