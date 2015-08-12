@@ -133,6 +133,10 @@ function create () {
 
     timer.start();
 
+    stateText = game.add.text(game.world.centerX,game.world.centerY,' ', { font: '84px Arial', fill: '#f00' });
+    stateText.anchor.setTo(0.5, 0.5);
+    stateText.visible = false;
+
   }
 
   function update () {
@@ -184,6 +188,25 @@ function create () {
         "I have a fever and the prescription is MORE COWBELL!"));
     }
 
+    if (health.value >= 42) {
+      stateText.text=" GAME OVER \n Click to restart";
+      stateText.visible = true;
+
+      emitter.on = false;
+      emitter.callAll('kill')
+      timer.stop(false);
+      if (bubble) bubble.kill();
+
+      game.input.onTap.addOnce(function() {
+        level = 1;
+        health.reset();
+        stateText.visible = false;
+        emitter.setXSpeed(100, 200);
+        emitter.flow(0, 1000, 1);
+        timer.start();
+      });
+    }
+
   }
 
   function didHit() {
@@ -219,6 +242,12 @@ function create () {
   Health.prototype.decrease = function() {
     if (this.value > 32)
       this.value--;
+    this.render();
+    return this.value;
+  }
+
+  Health.prototype.reset = function() {
+    this.value = 37;
     this.render();
     return this.value;
   }
