@@ -7,11 +7,10 @@ var game = new Phaser.Game(640, 368, Phaser.AUTO, '', {
 });
 
 var body, head, notes, explosions, thermometer;
-var health = 100;
 var value = 0;
 var hitX;
 var body, head, notes, explosions, bubble;
-var health = 37;
+var health;
 var value = 0;
 var hitX;
 var hitAny = false;
@@ -46,14 +45,9 @@ function create () {
     background.animations.add('bg_moving', [0, 1, 2, 3], 5, true);
     background.animations.play('bg_moving');
 
-    var walken = game.add.group();
+    health = new Health();
 
-    thermometer = game.add.sprite(0, 0, 'thermometer');
-    thermometer.x = game.width - thermometer.width / 2 - 10;
-    thermometer.y = 10;
-    thermometer.scale.setTo(0.5, 0.5)
-    thermometer.animations.add('fever', [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 5, true);
-    thermometer.animations.play('fever')
+    var walken = game.add.group();
 
     body = game.add.sprite(0, 0, 'walken_body');
     head = game.add.sprite(330, 630, 'walken_head');
@@ -105,6 +99,7 @@ function create () {
     });
 
     addOneNote(0, 100);
+
   }
 
   function update () {
@@ -113,7 +108,7 @@ function create () {
 
   function render () {
     // game.debug.body(head);
-    game.debug.text(health || '--', 2, 14, "#00ff00");
+    game.debug.text(health.value || '--', 2, 14, "#00ff00");
   }
 
   function moreCowbell () {
@@ -154,15 +149,15 @@ function create () {
   }
 
   function takeHit () {
-    health += 1;
+    health.increase();
 
     if (bubble)
       bubble.kill();
 
-    if (health >= 38 && health <= 40) {
+    if (health.value >= 38 && health.value <= 40) {
       bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256, "I NEED more cowbell!"));
     }
-    else if (health > 40) {
+    else if (health.value > 40) {
       bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
         "I have a fever and the prescription is MORE COWBELL!"));
     }
@@ -170,17 +165,45 @@ function create () {
   }
 
   function didHit() {
-    health -= 1;
+    health.decrease();
 
     if (bubble)
       bubble.kill();
 
-    if (health < 33) {
+    if (health.value < 33) {
       bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
         "That's what I'm talking about fellas"));
     }
   }
 
+  function Health() {
+    this.value = 37;
+
+    this.sprite = game.add.sprite(0, 0, 'thermometer');
+    this.sprite.x = game.width - this.sprite.width / 2 - 10;
+    this.sprite.y = 10;
+    this.sprite.scale.setTo(0.5, 0.5)
+    this.sprite.frame = 5;
+    this.sprite.animations.add('fever', [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
+  }
+
+  Health.prototype.increase = function() {
+    if (this.value < 42)
+      this.value++;
+    this.render();
+    return this.value;
+  };
+
+  Health.prototype.decrease = function() {
+    if (this.value > 32)
+      this.value--;
+    this.render();
+    return this.value;
+  }
+
+  Health.prototype.render = function() {
+    this.sprite.frame = 42 - this.value;
+  }
 
   // From http://www.keithmcmillen.com/blog/making-music-in-the-browser-web-midi-api/
   var midi, data;
