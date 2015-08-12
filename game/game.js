@@ -180,12 +180,11 @@ function create () {
       bubble.kill();
 
     if (health.value >= 38 && health.value <= 40) {
-      bubble = bubbles.add(new SpeechBubble(game, bubbleX, bubbleY, 256, "I NEED more cowbell!"))
-      // bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256, "I NEED more cowbell!"));
+      bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256, "I have a fever and the prescription is MORE COWBELL!"));
     }
     else if (health.value > 40) {
-      bubble = bubbles.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
-        "I have a fever and the prescription is MORE COWBELL!"));
+      bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
+        "MOAR COWBELL!!!"));
     }
 
     if (health.value >= 42) {
@@ -216,7 +215,7 @@ function create () {
       bubble.kill();
 
     if (health.value < 33) {
-      bubble = bubbles.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
+      bubble = game.world.add(new SpeechBubble(game, bubbleX, bubbleY, 256,
         "That's what I'm talking about fellas"));
     }
   }
